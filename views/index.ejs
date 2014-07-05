@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>24678</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/classroom.css">
+    <script>
+        var userID = '<%- userId %>';
+        var userName = '<%- userName %>';
+        var roomName = '<%- roomName %>';
+        var mouseFlag = '<%- status %>';
+    </script>
+    <script type="text/javascript" src='js/jquery.js'></script>
+    <script src='js/socket.io.js'></script>
+    <script src='js/kinetic-v5.0.2.min.js'></script>
+    <script src='js/kinetic.extension.js'></script>
+    <script src="js/jquery.ui.widget.js"></script>
+    <script src='js/jquery.fileupload.js'></script>
+    <style>
+        body{
+            -webkit-user-select:none;
+        }
+        #cursor{
+            display: none;
+            width: 10px;
+            height: 10px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-radius: 50%;
+            background: rgba(69,139,202,0.7);
+            z-index: 9999;
+        }
+        #fillTxtdiv{
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+        #uploadCtn{
+            width: 100%;
+            height: 20px;
+            display: none;
+            position: absolute;
+            bottom: 0;
+            z-index: 100;
+
+        }
+        .uploadCtnLeft{
+            width:30%;
+            height: 100%;
+            background: rgba(0,0,0,.5);
+            font-size: 12px;
+        }
+        .uploadCtnRight{
+            width: 70%;
+            height: 100%;
+        }
+        .uploadCtnRight progress{
+            width: 100%;
+            height: 100%;
+        }
+        #pdfWrap{
+            display: none;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 101;
+            background: rgba(0,0,0,.5);
+            overflow: scroll;
+        }
+        #pdfWrap button{
+            border: none;
+            font-size: 14px;
+            width: 80px;
+            height:30px;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 5px;
+            color: #fff;
+            background: #458BCA;
+            box-shadow: #fff 0 0 3px;
+        }
+        #pdfPre{
+            position: fixed;
+            right: 300px;
+            top: 70px;
+            z-index: 200;
+        }
+        #pdfNext{
+            position: fixed;
+            right: 400px;
+            top: 70px;
+            z-index: 200;
+        }
+        #pdfColse{
+            position: fixed;
+            right: 500px;
+            top: 70px;
+            z-index: 200;
+        }
+        .canvasTool{
+            z-index: 200;
+
+        }
+        .canvasTool img{
+            position: relative;
+        }
+        #drawTypeMove img{
+            top: 4px;
+        }
+        #drawTypeLine img{
+            top: 4px;
+        }
+        #drawTypeEarser img{
+            top: 4px;
+            left: 0px;
+        }
+        #drawTypeShape img{
+           top: 4px;
+        }
+        #drawTypeColor img{
+            top: 4px;
+        }
+        #drawTypeUpload img{
+            top: 1px;
+        }
+        #toolCancel img{
+            top: 2px;
+        }
+        #toolRepainter img{
+            top: 2px;
+        }
+        #toolSave img{
+            top: 5px;
+        }
+        .pagebg{
+            background: url(../images/canvasBg.png) repeat !important;
+        }
+        .canvasWrap {
+            background: none !important;
+        }
+        .canvasTool li.active{
+            background: #ECECEC;
+        }
+        .canvasTool li:hover{
+            background: #ECECEC;
+        }
+        #colorCtn img{
+            top: 5px;
+        }
+        #pencilSize li:nth-child(2) img{
+            top: 3px;
+        }
+        #pencilSize li:nth-child(3) img{
+            top: 5px;
+        }
+        #drawTypeLine{
+            position: relative;
+        }
+        #drawTypeLineFlag{
+            position: absolute;
+            left: 20px !important;
+            top: 20px !important;
+            z-index: 20;
+        }
+        .canvasTool{
+            top:60px;
+            z-index: 15;
+        }
+        .pagewrite{position: absolute;z-index: 10;}
+        .pagedown{position:absolute;z-index:8;}
+        .pagepaper{position:absolute;z-index: 6;}
+        .pageshape{position:absolute;z-index: 12;}
+
+        #pdfDraw{
+            width:100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 120;
+        }
+        #drawTypeShape,#drawTypeColor{
+            position: relative;
+        }
+        #shapeCtn,#colorCtn{
+            display: none;
+            position: absolute;
+            top: -1px;
+            left: -109px;
+            z-index: 110;
+            width:110px;
+            height:36px;
+        }
+        #colorCtn{
+            width: 145px;
+            left: -145px;
+        }
+        #shapeCtn em,#colorCtn em{
+            width: 35px;
+            height: 34px;
+            display: block;
+            float: left;
+            border: #D6D6D6 solid 1px;
+            border-right:none;
+            background: #fff;
+        }
+        #shapeCtn em:hover,#colorCtn em:hover{
+            background: #ECECEC;
+        }
+        #shapeCtn em:last-child,#colorCtn em:last-child{
+            border-right: #D6D6D6 solid 1px;
+        }
+        #rightCtnBtn{
+            display: block;
+            width: 34px;
+            height: 34px;
+            position: absolute;
+            right: 0;
+            top: 10px;
+            text-align: center;
+            z-index: 200;
+            cursor: pointer;
+            border: #D6D6D6 solid 1px;
+            border-right: none;
+            background: #fff;
+        }
+        #rightCtnBtn img{
+            position: relative;
+            right: 0px;
+            top: 7px;
+        }
+        #fillTxtdiv{
+            border: #D6D6D6 solid 1px;
+        }
+    #fillTxt{
+        outline: none;
+    }
+    #textok{
+        width: 60px;
+        height: 30px;
+        background: #458BCA;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+    }
+    </style>
+</head>
+<body class='crBodyBg'>
+
+<!-- //nav -->
+<div class="nav fn-clear">
+
+</div>
+<!-- //nav end -->
+
+<!-- //main -->
+<div class="main fn-clear">
+
+    <!-- //left  -->
+    <div class="mainLeft fn-left">
+        <div class="camera">
+            <img src="images/camera1.png" width="206" height="206">
+            <img src="images/camera2.png" width="206" height="206">
+        </div>
+        <div class="chat chatList">
+            <% if(status!=true){ %>
+                <style>
+                    .chatWrap{
+                        height: 100%;
+                    }
+                </style>
+            <% }else{ %>
+                <div id="timeCount">
+                    <button id="timeCountStart">开始上课</button>
+                    <button id="nextStudent">下一个学生</button>
+                </div>
+                <style>
+                    .chatWrap{
+                        height: -webkit-calc(100% - 42px);
+                        height: -moz-calc(100% - 42px);
+                        height: calc(100% - 42px);
+                    }
+                </style>
+            <% } %>
+
+            <div class="chatWrap">
+                <ul id="chatCtn">
+                     <li>
+                        欢迎来到优思在线课堂！
+                     </li>
+                </ul>
+            </div>
+
+        </div>
+        <div class="msgSend fn-clear">
+            <input type='text' id="chatInput" class='fn-left' >
+            <button class='fn-right' id="chatBtn">发送</button>
+        </div>
+    </div>
+    <!-- //left end -->
+
+    <!-- //canvas -->
+    <div class="mainMid fn-left">
+        <div class="mainTitle fn-clear">
+            <ul>
+                <li class='active'>
+                    <span>×</span>
+                    Page1
+                </li>
+                <strong id="createLayer">+</strong>
+            </ul>
+        </div>
+        <div class="canvasWrap fn-clear">
+
+            <!--//画布-->
+            <div id="canvas" style="width:2000px;height: 1000px">
+            </div>
+            <!--//画布end-->
+
+            <!-- //pdf -->
+            <div id='pdfWrap'>
+                <div id="pdfDraw"></div>
+                <canvas id='pdf' width="100%" height="100%"></canvas>
+                <button id='pdfPre'>上一页</button>
+                <button id='pdfNext'>下一页</button>
+                <button id='pdfColse'>关闭</button>
+            </div>
+            <!-- //pdf -->
+
+            <!--//右边工具-->
+            <div class="canvasTool">
+                <ul>
+                    <!--<li id="drawTypeMove" type="move">-->
+                        <!--<img src="images/canvasIconDrag.png" >-->
+                    <!--</li>-->
+                    <li class="active" id="drawTypeLine" type="line">
+                        <img src="images/canvasIconPen.png" >
+                        <img id="drawTypeLineFlag" src="images/pencilSmall.png" alt=""/>
+                    </li>
+                    <li id="drawTypeEarser" type="earser">
+                        <img src="images/canvasIconEraser.png" >
+                    </li>
+                    <li id="drawTypeShape" type="shape">
+                        <img src="images/canvasIconShape.png" />
+                        <div id="shapeCtn">
+                            <em type="rect">
+                                <img src="images/canvasIconRect.png" alt=""/>
+                            </em>
+                            <!--<li type="triangle">-->
+                            <!--<img src="images/canvasIconTriangle.png" alt=""/>-->
+                            <!--</li>-->
+                            <em type="circle">
+                                <img src="images/canvasIconCircle.png" alt=""/>
+                            </em>
+                            <em type="segment">
+                                <img src="images/canvasIconSegment.png" alt=""/>
+                            </em>
+                        </div>
+                    </li>
+                    <li id="drawTypeText" type="text">
+                        <img src="images/canvasIconText.png" >
+                    </li>
+                    <li id="drawTypeColor" type="color">
+                        <img src="images/canvasIconColorBlack.png" >
+                        <div id="colorCtn">
+                            <em type="#000000" sourceImg="images/canvasIconColorBlack.png">
+                                <img src="images/colorIconBlack.png" alt=""/>
+                            </em>
+                            <em type="#eb4f38" sourceImg="images/canvasIconColorRed.png">
+                                <img src="images/colorIconRed.png" alt=""/>
+                            </em>
+                            <em type="#f4c600" sourceImg="images/canvasIconColorYellow.png">
+                                <img src="images/colorIconYellow.png" alt=""/>
+                            </em>
+                            <em type="#00bb9c" sourceImg="images/canvasIconColorGreen.png">
+                                <img src="images/colorIconGreen.png" alt=""/>
+                            </em>
+                        </div>
+                    </li>
+                    <li id="drawTypeUpload" type="upload">
+                        <img src="images/canvasIconUpload.png" >
+                    </li>
+                    <!--<li id="toolCancel">-->
+                        <!--<img src="images/canvasIconCancel.png" >-->
+                    <!--</li>-->
+                    <!--<li id="toolRepainter">-->
+                        <!--<img src="images/canvasIconRedraw.png" >-->
+                    <!--</li>-->
+                    <!--<li id="toolSave">-->
+                        <!--<img src="images/canvasIconSave.png" >-->
+                    <!--</li>-->
+                </ul>
+                <div id="pencilSize" style="margin-top: 20px;">
+                    <li>
+                        <img src="images/pencilSmall.png" alt=""/>
+                    </li>
+                    <li>
+                        <img src="images/pencilMid.png" alt=""/>
+                    </li>
+                    <li>
+                        <img src="images/pencilBig.png" alt=""/>
+                    </li>
+                </div>
+
+
+            </div>
+            <!--//右边工具 end-->
+
+            <!--//上传-->
+            <div id='uploadCtn' class='uploadCtn fn-clear'>
+                <div class="uploadCtnLeft fn-left">
+                    <input type="file" name='file' id='file' data-url="/upload" >
+                </div>
+                <div class="uploadCtnRight fn-right">
+                    <progress value='50' max='100'>60</progress>
+                </div>
+            </div>
+            <!--//上传end-->
+
+            <!--//右内容隐藏按钮-->
+            <div id="rightCtnBtn">
+                <img src="images/canvasIconDrag.png"/>
+            </div>
+            <!--//右内容隐藏按钮 end-->
+
+
+        </div>
+
+    </div>
+    <!-- //canvas end -->
+
+    <!-- //right -->
+    <div class="mainRight fn-right">
+        <div class="rightRitle fn-clear">
+            <span type="studentList" class='active'>学生列表</span>
+            <span type="courseware">备课文件</span>
+        </div>
+        <div id='studentList' class="list fn-clear" >
+            <table>
+
+            </table>
+        </div>
+
+        <div id='courseware' class="list fn-clear" style="display: none">
+            <ul>
+
+            </ul>
+        </div>
+
+        <div class="othersTile">
+            旁听列表
+            <a id="answerBtn" href="#">点击答疑</a>
+        </div>
+        <div id='other' class="list fn-clear">
+            <table>
+                <!--<tr>-->
+                    <!--<td>周兴天</td>-->
+                    <!--<td>-->
+                        <!--<img src="images/studentCamera.png">-->
+                        <!--<img src="images/studentVoice.png">-->
+                        <!--<img src="images/studentBoardGray.png">-->
+                    <!--</td>-->
+                <!--</tr>-->
+            </table>
+        </div>
+
+    </div>
+    <!-- //right end -->
+
+</div>
+<!-- //main end -->
+
+<!--//鼠标位置-->
+<div id="cursor"></div>
+<!--//鼠标位置 end-->
+
+<!-- //文字输入框 -->
+<div id="fillTxtdiv">
+<textarea id="fillTxt"></textarea><button id="textok">确定</button>
+</div>
+<!-- //文字输入框 end -->
+
+
+
+<!--//答疑弹出框-->
+<div class="answerBlock fn-clear">
+    <!--<div class="answerBlockTitle fn-clear">-->
+        <!--问题描述：-->
+        <!--<input type="text" required="required" />-->
+    <!--</div>-->
+    <!--<div class="answerBlockCtn fn-clear">-->
+        <!--问题内容：-->
+        <!--<textarea name="" id="" cols="" rows="10"></textarea>-->
+    <!--</div>-->
+    <div class="answerBlockImg">
+        上传问题图片：
+        <input type="file" name='answerFile' id='answerFile' data-url="/answerUpload" >
+    </div>
+    <!--<button id="answerBlockSubmit" class="answerBlockBtn">提交</button>-->
+    <button id="answerBlockCancle" class="answerBlockBtn">取消</button>
+    <progress id="answerBlockProgress" value='0' max='100'>60</progress>
+</div>
+<!--//答疑弹出框 end-->
+
+
+
+<script src="js/emit.js"></script>
+<script src="js/action.js"></script>
+
+<script src="js/draw.js"></script>
+<script src="js/canvas.js"></script>
+
+
+<!-- //功能js end -->
+
+<!-- //pdf.js -->
+<!--//pdf.js-->
+
+<script src="js/src/shared/util.js"></script>
+<script src="js/src/shared/colorspace.js"></script>
+<script src="js/src/shared/function.js"></script>
+<script src="js/src/shared/annotation.js"></script>
+<script src="js/src/display/api.js"></script>
+<script src="js/src/display/metadata.js"></script>
+<script src="js/src/display/canvas.js"></script>
+<script src="js/src/display/webgl.js"></script>
+<script src="js/src/display/pattern_helper.js"></script>
+<script src="js/src/display/font_loader.js"></script>
+<script>
+    // Specify the main script used to create a new PDF.JS web worker.
+    // In production, leave this undefined or change it to point to the
+    // combined `pdf.worker.js` file.
+    PDFJS.workerSrc = 'js/src/worker_loader.js';
+</script>
+<script src="js/pdfMain.js"></script>
+
+</body>
+</html>
